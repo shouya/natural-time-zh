@@ -1,0 +1,124 @@
+# -*- mode: ruby; coding: utf-8 -*-
+
+class FutureDateParser
+
+  def today
+    '今天' / '今日' / '今'
+    {
+      def value
+        [:today]
+      end
+    }
+  end
+
+  def tomorrow
+    '明天' / '明日' / '明'
+    {
+      def value
+        [:tomorrow]
+      end
+    }
+  end
+
+  def day_after_tomorrow
+    '後天' / '後日'
+    {
+      def value
+        [:day_after_tomorrow]
+      end
+    }
+  end
+
+  def day_of_week
+    '一' | '二' | '三' | '四' | '五' | '六' | '日' | '天'
+    {
+      def value
+        case text_value
+        when '一' then :monday
+        when '二' then :tuesday
+        when '三' then :wednesday
+        when '四' then :thursday
+        when '五' then :friday
+        when '六' then :saturday
+        when '日', '天' then :sunday
+        end
+      end
+    }
+  end
+
+  def date_in_week
+    ('週' / '周' / '星期' / '禮拜' / '礼拜') day_of_week
+
+    {
+      def value
+        [:date_in_week, day_of_week.value]
+      end
+    }
+  end
+
+  def day_in_this_week
+    ('這' / '这') day_in_week
+    {
+      def value
+        [:day_in_this_week, date_in_week.value[1]]
+      end
+    }
+  end
+
+  def day_in_next_week
+    '下' day_in_week
+    {
+      def value
+        [:day_in_next_week, date_in_week.value[1]]
+      end
+    }
+  end
+
+
+  def day_of_month_chinese
+    ("一" / "二" / "三" / "四" / "五" / "六" / "七" / "八" / "九" / "十" /
+     "十一" / "十二" / "十三" / "十四" / "十五" / "十六" / "十七" / "十八" /
+     "十九" / "二十" / "二十一" / "二十二" / "二十三" / "二十四" / "二十五" /
+     "二十六" / "二十七" / "二十八" / "二十九" / "三十")
+    {
+      def value
+        %w[一 二 三 四 五 六 七 八 九 十 十一 十二 十三 十四
+           十五 十六 十七 十八 十九 二十 二十一 二十二 二十三
+           二十四 二十五 二十六 二十七 二十八 二十九 三十]
+          .index(text_value) + 1
+      end
+    }
+  end
+
+  def day_of_month
+    ([1-9] / '1' [1-9] / '2' [1-9] / '30' / '31')
+    {
+      def value
+        text_value.to_i
+      end
+    }
+  end
+
+  def month_of_year_chinese
+
+  end
+
+  def day_in_month
+    (day_of_month / day_of_month_chinese) sp* ('號' / '日')
+    {
+      def value
+        elements[0].value
+      end
+    }
+  end
+
+  def month_day
+    # X 月 X 日
+  end
+
+  def date
+    (today / tomorrow / day_after_tomorrow /
+     day_in_this_week / day_in_next_week / day_in_week /
+     day_in_month)
+  end
+end
